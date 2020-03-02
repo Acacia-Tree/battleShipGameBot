@@ -5,7 +5,11 @@ export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
     console.log(mapArray);
 }
-function levelArray(levelMap) {
+/*function wave() {
+    let Ni = 0; //счетчик итераций, повторений
+    mapArray[ship.y][ship.x]; //стартовая точка
+}*/
+function levelArray(levelMap) { // без стартовой точки, конечной точки;
     let array = [[]];
     let n = 0;
     let i = 0;
@@ -16,7 +20,17 @@ function levelArray(levelMap) {
             i++;
             array.push([]);
         } else if (levelMap[n] != ` `) {
-            array[i][j] = levelMap[n];
+            let waveValue;
+            if (levelMap[n] == '#') {
+                waveValue = 255; //непроходимо
+            } else if (levelMap[n] == '~') {
+                waveValue = 254; //проходимо
+            } else if (levelMap[n] == 'H') {
+                waveValue = 256; //проходимо
+            } else if (levelMap[n] == 'O') {
+                waveValue = 257; //проходимо
+            } 
+            array[i][j] = {mapValue: levelMap[n], waveValue: waveValue};
             j++
         }
         n++
