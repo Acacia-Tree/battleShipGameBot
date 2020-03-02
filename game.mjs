@@ -1,7 +1,29 @@
 const shipVolume = 368;//
+let currentShipVolume = 0;
+let mapArray;
 export function startGame(levelMap, gameState) {
+    mapArray = levelArray(levelMap);
+    console.log(mapArray);
 }
+function levelArray(levelMap) {
+    let array = [[]];
+    let n = 0;
+    let i = 0;
+    let j = 0;
+    while (n != levelMap.length) {
+        if (levelMap[n] == '\n') {
+            j = 0;
+            i++;
+            array.push([]);
+        } else if (levelMap[n] != ` `) {
+            array[i][j] = levelMap[n];
+            j++
+        }
+        n++
+    }
+    return array;
 
+}
 function loadAmount (productInPort) { //goodsInPort with chosen index
     let maxAllowed = Math.floor(shipVolume / productInPort.volume); // max allowed on ship
     return (productInPort.amount <= maxAllowed) ? productInPort.amount : maxAllowed; //Итоговый loadamount
@@ -49,6 +71,20 @@ function canSell(shipGoods) {//sell onl if there is something to sell
     return shipGoods.length != 0
 }
 
+function bestPort(gameState) {
+    let prices = gameState.prices;
+    let maxPrice = prices[0].fabric;
+    let maxIndex = 0;
+    for (let i = 1; i < prices; i++) {
+        if (prices[i].fabric > maxPrice) {
+            maxPrice = prices[i].fabric;
+            maxIndex = i;
+        }
+    }
+    return prices[maxIndex].portId;  
+}
+
+
 export function getNextCommand(gameState) {
     let goodsInPort = gameState.goodsInPort; // goods in the port 
     let  shipGoods = gameState.ship.goods;  //what should go or is on the ship (in first product)
@@ -57,12 +93,16 @@ export function getNextCommand(gameState) {
         
         if (canLoad(goodsInPort, shipGoods)){
             let i = profitIndex(gameState);
-            //let i = 0;
-            return "LOAD " + goodsInPort[i].name + " " + loadAmount(goodsInPort[i]); //
+            let load = loadAmount(goodsInPort[i])
+           // console.log(goodsInPort[i].volume * load);//working with volume
+           //currentShipVolume
+            return "LOAD " + goodsInPort[i].name + " " + load; //
         }
     }
     if (canSell(shipGoods)) {
         if (isInPort(gameState, false)) {
+            //console.log(goodsInPort.volume * shipGoods[0].amount); Хотя зачем считать volume, если все равно все продадится и будет 0
+
             return "SELL " + shipGoods[0].name + " " + shipGoods[0].amount; //my ship usually contains only one product, so it's in the first array
         } else {
             return "N";
