@@ -1,14 +1,38 @@
 const shipVolume = 368;//
 let currentShipVolume = 0;
 let mapArray;
+let moveArray = [{x: null, y: null}]; //путь перемещения
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
     console.log(mapArray);
 }
-/*function wave() {
+function wave(gameState) {
     let Ni = 0; //счетчик итераций, повторений
-    mapArray[ship.y][ship.x]; //стартовая точка
-}*/
+    let Nk = 64; //максимальное возможное число итераций от балды
+    mapArray[gameState.ship.y][gameState.ship.x].waveValue = 253; //стартовая точка
+    let xFinish = 14;
+    let yFinish = 14;
+    mapArray[yFinish][xFinish].waveValue = 0; //конечная точка
+    while (Ni <= Nk) {
+        for (let i = 1; i < mapArray.length; i++) {
+            for (let j = 1; j < mapArray[i].length; j++) {
+                if (mapArray[i][j].waveValue == Ni) {
+                    if (mapArray[i + 1][j].waveValue == 253 || mapArray[i - 1][j].waveValue == 253 || mapArray[i][j + 1].waveValue == 253 || mapArray[i][j - 1].waveValue == 253) {
+                        //10 Пункт
+                    } else if (mapArray[i + 1][j].waveValue == 254 || mapArray[i - 1][j].waveValue == 254 || mapArray[i][j + 1].waveValue == 254 || mapArray[i][j - 1].waveValue == 254) {
+                        mapArray[i + 1][j].waveValue == Ni + 1;
+                    } 
+                }
+            }
+        }
+        Ni++;
+    } 
+    if (Ni > Nk) {
+        return false;//поиск маршрута неудачное
+    } else {
+        return true;
+    }
+}
 function levelArray(levelMap) { // без стартовой точки, конечной точки;
     let array = [[]];
     let n = 0;
@@ -26,9 +50,9 @@ function levelArray(levelMap) { // без стартовой точки, кон�
             } else if (levelMap[n] == '~') {
                 waveValue = 254; //проходимо
             } else if (levelMap[n] == 'H') {
-                waveValue = 256; //проходимо
+                waveValue = 252; //проходимо
             } else if (levelMap[n] == 'O') {
-                waveValue = 257; //проходимо
+                waveValue = 251; //проходимо
             } 
             array[i][j] = {mapValue: levelMap[n], waveValue: waveValue};
             j++
