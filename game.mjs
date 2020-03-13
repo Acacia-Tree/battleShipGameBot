@@ -5,23 +5,109 @@ let moveArray = [{x: null, y: null}]; //путь перемещения
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
     console.log(mapArray);
+    //mapArray[gameState.ship.y][gameState.ship.x].waveValue = 0; //конечная точка
+    wave(gameState);
+        let newArray = mapArray.map(el => el.map(el => el.waveValue));
+        console.table(newArray);
+        /*for (let i = 0; i < moveArray.length; i++) {
+            console.log("x:" + moveArray.x + " " + "y:" + moveArray.y);
+        }*/
+        console.table("start:" + moveArray);
 }
+function getMoveArray(yStart, xStart) { //does it write it down normally? sometimes it works as expected, sometimes it's array islonger than needed, usually when i press startgame two times in a row, same level
+    //when i refresh before each start it works as expected, perhaps this is because of my globals not refreshing each time. i should initialize them in startGame and put them in classes
+    moveArray[0] = {x: xStart, y: yStart};
+    let lastIndex = moveArray.length - 1;
+    let minWaveValue = 253;
+    let count = 0; //make sure it doesn't do too much
+    while (minWaveValue != 0 && count < 20) { //until we reach the end point (which will be in the last array element)
+        let x = moveArray[lastIndex].x;
+        let y = moveArray[lastIndex].y;
+        minWaveValue = mapArray[y + 1][x].waveValue;
+        let minY = y + 1;
+        let minX = x;
+        if (mapArray[y - 1][x].waveValue < minWaveValue) {
+            minWaveValue = mapArray[y - 1][x].waveValue;
+            minY = y - 1;
+            minX = x;
+        }
+        if (mapArray[y][x + 1].waveValue < minWaveValue) {
+            minWaveValue = mapArray[y][x + 1].waveValue
+            minY = y;
+            minX = x + 1;
+        }
+        if (mapArray[y][x - 1].waveValue < minWaveValue) {
+            minWaveValue = mapArray[y][x - 1].waveValue;
+            minY = y;
+            minX = x - 1;
+        }
+        moveArray.push({x: minX, y: minY});
+        lastIndex = moveArray.length - 1;
+        //console.log("minWaveValue:" +minWaveValue);
+        //console.log(moveArray[lastIndex]);
+        count++;
+    } 
+    return moveArray;
+}
+function bestPort(gameState) { //does it show the best port?
+    let prices = gameState.prices;
+    let ports = gameState.ports;
+    let maxPrice = prices[0].fabric;
+    let maxIndex = 0;
+    for (let i = 1; i < prices; i++) {
+        if (prices[i].fabric > maxPrice) {
+            maxPrice = prices[i].fabric;
+            maxIndex = i;
+        }
+    }
+    let bestId = prices[maxIndex].portId;
+    return ports[bestId];  
+}
+
 function wave(gameState) {
     let Ni = 0; //счетчик итераций, повторений
     let Nk = 64; //максимальное возможное число итераций от балды
-    mapArray[gameState.ship.y][gameState.ship.x].waveValue = 253; //стартовая точка
-    let xFinish = 14;
-    let yFinish = 14;
-    mapArray[yFinish][xFinish].waveValue = 0; //конечная точка
+    //let xFinish = 14; //for level 3
+   //let yFinish = 14;
+   let finish = bestPort(gameState);
+   let xFinish = finish.x; 
+   let yFinish = finish.y;
+    console.log("xfin" + xFinish +"yfin" +yFinish)
+    mapArray[yFinish][xFinish].waveValue = 253; //стартовая точка
+    mapArray[gameState.ship.y][gameState.ship.x].waveValue = 0; //конечная точка
     while (Ni <= Nk) {
-        for (let i = 1; i < mapArray.length; i++) {
-            for (let j = 1; j < mapArray[i].length; j++) {
+        for (let i = 1; i < mapArray.length - 1; i++) { //c 1 и -1 чтобы не учитывать граничные значения пока
+            for (let j = 1; j < mapArray[i].length - 1; j++) {//c 1 и -1 чтобы не учитывать граничные значения пока
                 if (mapArray[i][j].waveValue == Ni) {
-                    if (mapArray[i + 1][j].waveValue == 253 || mapArray[i - 1][j].waveValue == 253 || mapArray[i][j + 1].waveValue == 253 || mapArray[i][j - 1].waveValue == 253) {
-                        //10 Пункт
-                    } else if (mapArray[i + 1][j].waveValue == 254 || mapArray[i - 1][j].waveValue == 254 || mapArray[i][j + 1].waveValue == 254 || mapArray[i][j - 1].waveValue == 254) {
-                        mapArray[i + 1][j].waveValue == Ni + 1;
+                    if (mapArray[i + 1][j].waveValue == 253) {
+                        getMoveArray(i + 1, j);
+                        return true;
                     } 
+                    if ( mapArray[i - 1][j].waveValue == 253) {
+                        getMoveArray(i - 1, j);
+                        return true;
+                    } 
+                    if (mapArray[i][j + 1].waveValue == 253) {
+                        getMoveArray(i, j + 1);
+                        return true;
+                    } 
+                    if (mapArray[i][j - 1].waveValue == 253) {
+                        getMoveArray(i, j - 1);
+                        return true;
+                        //10 Пункт
+                    } 
+                    if (mapArray[i + 1][j].waveValue == 254) {
+                        mapArray[i + 1][j].waveValue = Ni + 1;
+                    } 
+                    if (mapArray[i - 1][j].waveValue == 254) {
+                        mapArray[i - 1][j].waveValue = Ni + 1;
+                    } 
+                    if (mapArray[i][j + 1].waveValue == 254) {
+                        mapArray[i][j + 1].waveValue = Ni + 1;
+                     } 
+                     if (mapArray[i][j - 1].waveValue == 254)  {
+                        mapArray[i][j - 1].waveValue = Ni + 1;
+                     }
                 }
             }
         }
@@ -47,13 +133,13 @@ function levelArray(levelMap) { // без стартовой точки, кон�
             let waveValue;
             if (levelMap[n] == '#') {
                 waveValue = 255; //непроходимо
-            } else if (levelMap[n] == '~') {
+            } else if (levelMap[n] == '~' || levelMap[n] == 'H' || levelMap[n] == 'O' ) {
                 waveValue = 254; //проходимо
-            } else if (levelMap[n] == 'H') {
+            } /*else if (levelMap[n] == 'H') {
                 waveValue = 252; //проходимо
             } else if (levelMap[n] == 'O') {
                 waveValue = 251; //проходимо
-            } 
+            } */
             array[i][j] = {mapValue: levelMap[n], waveValue: waveValue};
             j++
         }
@@ -103,31 +189,62 @@ function canLoad(goodsInPort, shipGoods) { //Если корабль попро�
             available = true;
         }
     }
+    //add later on check if there is space on ship
     return available && shipGoods.length == 0; //load only once shipGoods.length == 0 simple version
 }//loadAmount() != 0 rethink this logic !!!!!!!!!!!!!!!!!!!!!
 function canSell(shipGoods) {//sell onl if there is something to sell
     return shipGoods.length != 0
 }
 
-function bestPort(gameState) {
-    let prices = gameState.prices;
-    let maxPrice = prices[0].fabric;
-    let maxIndex = 0;
-    for (let i = 1; i < prices; i++) {
-        if (prices[i].fabric > maxPrice) {
-            maxPrice = prices[i].fabric;
-            maxIndex = i;
-        }
-    }
-    return prices[maxIndex].portId;  
-}
-
-
 export function getNextCommand(gameState) {
     let goodsInPort = gameState.goodsInPort; // goods in the port 
     let  shipGoods = gameState.ship.goods;  //what should go or is on the ship (in first product)
+    let last = moveArray.length - 1;
     
-    if (isInPort(gameState, true)) {//is in homeport
+    if (isInPort(gameState, true)|| isInPort(gameState, false)) {
+        if (isInPort(gameState, true) && canLoad(goodsInPort, shipGoods)) {//is in homeport
+            let i = profitIndex(gameState);
+            let load = loadAmount(goodsInPort[i])
+            if (moveArray.length == 1) {
+                let finish = bestPort(gameState);
+                moveArray = getMoveArray(finish.y, finish.x);
+                console.log(moveArray);
+                //this is without recalculating the wave, don't forget
+            }
+            return "LOAD " + goodsInPort[i].name + " " + load; 
+        } else if  (isInPort(gameState, false) && canSell(shipGoods)) {
+                moveArray = getMoveArray(moveArray[last].y, moveArray[last].x).reverse();
+                console.table(moveArray);
+                console.log('im in port');
+            return "SELL " + shipGoods[0].name + " " + shipGoods[0].amount; //my ship usually contains only one product, so it's in the first array
+        }
+    }
+    moveArray.pop();
+    last = moveArray.length - 1;
+    if (last == -1) {
+        return "WAIT";
+    }
+    console.log("last^" + last);
+    console.table("movearray:" + moveArray[last].x + " " + moveArray[last].y);
+    console.log("ship:" + gameState.ship.x + " " + gameState.ship.y);
+    
+    if (gameState.ship.x > moveArray[last].x) {
+        console.log("W");
+        return "W"
+    }
+    if (gameState.ship.x < moveArray[last].x) {
+        console.log("E");
+        return "E";
+    }
+    if (gameState.ship.y > moveArray[last].y) {
+        console.log("N");
+        return "N";
+    } 
+    if (gameState.ship.y < moveArray[last].y) {
+        console.log("S");
+        return "S";
+    }
+    /*if (isInPort(gameState, true)) {//is in homeport
         
         if (canLoad(goodsInPort, shipGoods)){
             let i = profitIndex(gameState);
@@ -147,7 +264,7 @@ export function getNextCommand(gameState) {
         }
     } else {
         return "S";
-    }
+    }*/
     return 'WAIT';
     
 }
