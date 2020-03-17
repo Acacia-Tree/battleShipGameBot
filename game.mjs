@@ -71,16 +71,16 @@ function bestPort(gameState) { //does it show the best port?
     let maxPrice = 0;
     let bestGoodsIndex = -1;
     let bestPortIndex = -1;
-    for (let i = 0; i < ports.length; i++) {
+    for (let i = 1; i < ports.length; i++) {
         let currentGoodsIndex = profitIndex(gameState, i);
-        if (currentGoodsIndex > maxPrice) {
-            maxPrice = productProfit(gameState, currentGoodsIndex, i);
+        let currentPrice = productProfit(gameState, currentGoodsIndex, i);
+        if (currentPrice > maxPrice) {
+            maxPrice = currentPrice;
             console.log("yooo" +maxPrice);
             bestGoodsIndex = currentGoodsIndex;
             bestPortIndex = i;
         }
     }
-    console.log("oh" + bestGoodsIndex);
     return ports[bestPortIndex];  
 }
 
@@ -90,7 +90,6 @@ function wave(gameState) {
     //let xFinish = 14; //for level 3
    //let yFinish = 14;
    let finish = bestPort(gameState);
-   console.log("huh" + finish);
    let xFinish = finish.x; 
    let yFinish = finish.y;
     console.log("xfin" + xFinish +"yfin" +yFinish)
@@ -176,19 +175,20 @@ function loadAmount (productInPort) { //goodsInPort with chosen index
 function productProfit (gameState, index, portId) {//считает прибыль с определенного товара 
     let goodsInPort = gameState.goodsInPort;//array
     let name = goodsInPort[index].name;
-    let prices = gameState.prices[portId];//СЧИТАЕТ В Н-ОМ ПОРТУ
-    console.log(name + "is" + loadAmount(goodsInPort[index]) * prices[name])
+    let prices = gameState.prices[portId - 1];//СЧИТАЕТ В Н-ОМ ПОРТУ
+    console.log(name + "is" + loadAmount(goodsInPort[index]) * 
+    prices[name])
     return loadAmount(goodsInPort[index]) * prices[name]; 
 }
 function profitIndex (gameState, portId) {  //выбирает самый выгодный из goodsInPort(домашний порт) ПО ЦЕНАМ ОПРЕДЕЛЕННОГО ПОРТА(ИХ ЖЕ ТАМ НЕСКОЛЬКО)
     let goodsInPort = gameState.goodsInPort;//array
     let profitIndex = 0;
+    console.log("length" + goodsInPort.length);
     for (let i = 1; i < goodsInPort.length; i++) {
         if (productProfit(gameState, profitIndex, portId) < productProfit(gameState, i, portId)) {
             profitIndex = i;
         }
     }
-    console.log("well");
     return profitIndex;
 }
 function isInPort(gameState, home) {//assuming home is in first, home is true
