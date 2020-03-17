@@ -19,24 +19,28 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
     moveArray[0] = {x: xStart, y: yStart};
     let lastIndex = moveArray.length - 1;
     let minWaveValue = 253;
+    let minX = -1; // not really used
+    let minY = -1;
     let count = 0; //make sure it doesn't do too much
     while (minWaveValue != 0 && count < 20) { //until we reach the end point (which will be in the last array element)
         let x = moveArray[lastIndex].x;
         let y = moveArray[lastIndex].y;
-        minWaveValue = mapArray[y + 1][x].waveValue;
-        let minY = y + 1;
-        let minX = x;
-        if (mapArray[y - 1][x].waveValue < minWaveValue) {
+        if ((y + 1 < mapArray.length) && mapArray[y + 1][x].waveValue < minWaveValue ) {
+            minWaveValue = mapArray[y + 1][x].waveValue;
+            minY = y + 1;
+            minX = x;
+        }
+        if ( (y - 1 >= 0) && mapArray[y - 1][x].waveValue < minWaveValue) {
             minWaveValue = mapArray[y - 1][x].waveValue;
             minY = y - 1;
             minX = x;
         }
-        if (mapArray[y][x + 1].waveValue < minWaveValue) {
+        if ((x + 1 < mapArray[0].length) && mapArray[y][x + 1].waveValue < minWaveValue) {
             minWaveValue = mapArray[y][x + 1].waveValue
             minY = y;
             minX = x + 1;
         }
-        if (mapArray[y][x - 1].waveValue < minWaveValue) {
+        if ( (x - 1 >= 0) && mapArray[y][x - 1].waveValue < minWaveValue) {
             minWaveValue = mapArray[y][x - 1].waveValue;
             minY = y;
             minX = x - 1;
@@ -155,10 +159,11 @@ function loadAmount (productInPort) { //goodsInPort with chosen index
 function productProfit (gameState, index) {//считает прибыль с определенного товара 
     let goodsInPort = gameState.goodsInPort;//array
     let name = goodsInPort[index].name;
-    let prices = gameState.prices[0];
+    let prices = gameState.prices[0];//СЧИТАЕТ В ПЕРВОМ ПОРТУ
+    console.log(name + "is" + loadAmount(goodsInPort[index]) * prices[name])
     return loadAmount(goodsInPort[index]) * prices[name]; 
 }
-function profitIndex (gameState) {  //выбирает самый выгодный
+function profitIndex (gameState) {  //выбирает самый выгодный из goodsInPort
     let goodsInPort = gameState.goodsInPort;//array
     let profitIndex = 0;
     for (let i = 1; i < goodsInPort.length; i++) {
