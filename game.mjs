@@ -88,7 +88,7 @@ function bestPort(gameState) { //does it show the best port?
         }
     }
     console.log("bestportIndex:" + bestPortIndex);
-    return ports[bestPortIndex];  
+    return bestPortIndex;  
 }
 
 function wave(gameState) {
@@ -96,10 +96,10 @@ function wave(gameState) {
     let Nk = 64; //максимальное возможное число итераций от балды
     //let xFinish = 14; //for level 3
    //let yFinish = 14;
-   let finish = bestPort(gameState);
-   let xFinish = finish.x; 
-   let yFinish = finish.y;
-    console.log("xfin" + xFinish +"yfin" +yFinish)
+   let finishId = bestPort(gameState);
+   let ports = gameState.ports;
+   let xFinish = ports[finishId].x; 
+   let yFinish = ports[finishId].y; 
     mapArray[yFinish][xFinish].waveValue = 253; //стартовая точка
     mapArray[gameState.ship.y][gameState.ship.x].waveValue = 0; //конечная точка
     while (Ni <= Nk) {
