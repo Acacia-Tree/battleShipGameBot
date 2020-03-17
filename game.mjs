@@ -16,8 +16,10 @@ export function startGame(levelMap, gameState) {
 }
 function getMoveArray(yStart, xStart) { //does it write it down normally? sometimes it works as expected, sometimes it's array islonger than needed, usually when i press startgame two times in a row, same level
     //when i refresh before each start it works as expected, perhaps this is because of my globals not refreshing each time. i should initialize them in startGame and put them in classes
+    console.log("starters: " + yStart + " " + xStart);
     moveArray[0] = {x: xStart, y: yStart};
     let lastIndex = moveArray.length - 1;
+    console.log("lastIndex:" + lastIndex);
     let minWaveValue = 253;
     let minX = -1; // not really used
     let minY = -1;
@@ -25,6 +27,8 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
     while (minWaveValue != 0 && count < 20) { //until we reach the end point (which will be in the last array element)
         let x = moveArray[lastIndex].x;
         let y = moveArray[lastIndex].y;
+        console.log("y+1:" + (y + 1));
+        console.log("x:" + x);
         if ((y + 1 < mapArray.length) && mapArray[y + 1][x].waveValue < minWaveValue ) {
             minWaveValue = mapArray[y + 1][x].waveValue;
             minY = y + 1;
@@ -71,16 +75,19 @@ function bestPort(gameState) { //does it show the best port?
     let maxPrice = 0;
     let bestGoodsIndex = -1;
     let bestPortIndex = -1;
+    console.log(ports.length);
     for (let i = 1; i < ports.length; i++) {
+        console.log("hi im " + i);
         let currentGoodsIndex = profitIndex(gameState, i);
         let currentPrice = productProfit(gameState, currentGoodsIndex, i);
         if (currentPrice > maxPrice) {
             maxPrice = currentPrice;
-            console.log("yooo" +maxPrice);
+            console.log("MaxPrice:" +maxPrice);
             bestGoodsIndex = currentGoodsIndex;
             bestPortIndex = i;
         }
     }
+    console.log("bestportIndex:" + bestPortIndex);
     return ports[bestPortIndex];  
 }
 
@@ -176,8 +183,9 @@ function productProfit (gameState, index, portId) {//считает прибыл
     let goodsInPort = gameState.goodsInPort;//array
     let name = goodsInPort[index].name;
     let prices = gameState.prices[portId - 1];//СЧИТАЕТ В Н-ОМ ПОРТУ
+    console.log("portid  is:" + (portId ));
     console.log(name + "is" + loadAmount(goodsInPort[index]) * 
-    prices[name])
+    prices[name]);
     return loadAmount(goodsInPort[index]) * prices[name]; 
 }
 function profitIndex (gameState, portId) {  //выбирает самый выгодный из goodsInPort(домашний порт) ПО ЦЕНАМ ОПРЕДЕЛЕННОГО ПОРТА(ИХ ЖЕ ТАМ НЕСКОЛЬКО)
@@ -227,12 +235,16 @@ export function getNextCommand(gameState) {
     if (isInPort(gameState, true)|| isInPort(gameState, false)) {
         if (isInPort(gameState, true) && canLoad(goodsInPort, shipGoods)) {//is in homeport
             let portId = 1; //первый порт
-            if (gameState.ports.length > 1) {
+            if (gameState.ports.length > 2) {
                 portId = bestPort(gameState);
+                console.log("i wuz here");
                 
             }
             if (moveArray.length == 1) {
-                moveArray = getMoveArray(portId.y, portId.x); //calculating new route
+                console.log("here too");
+                let ports = gameState.ports;
+                console.log(ports[portId].y + " " + ports[portId].x);
+                moveArray = getMoveArray(ports[portId].y, ports[portId].x); //calculating new route
                 console.log(moveArray);
                 //this is without recalculating the wave, don't forget
             }
