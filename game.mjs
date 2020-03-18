@@ -45,24 +45,11 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
             moveArray.push({x: minX, y: minY});
         }
         lastIndex = moveArray.length - 1;
-        //console.log("minWaveValue:" +minWaveValue);
-        //console.log(moveArray[lastIndex]);
         count++;
     } 
     return moveArray;
 }
-function bestPort(gameState) { //does it show the best port?
-   /* let prices = gameState.prices;
-    let ports = gameState.ports;
-    let maxPrice = prices[0].fabric;
-    let maxIndex = 0;
-    for (let i = 1; i < prices; i++) {
-        if (prices[i].fabric > maxPrice) {
-            maxPrice = prices[i].fabric;
-            maxIndex = i;
-        }
-    }
-    let bestId = prices[maxIndex].portId;*/
+function bestPort(gameState) { 
     let ports = gameState.ports;
     let prices = gameState.prices;
     let goods = gameState.goodsInPort;
@@ -84,8 +71,6 @@ function bestPort(gameState) { //does it show the best port?
 function wave(gameState) {
     let Ni = 0; //счетчик итераций, повторений
     let Nk = 64; //максимальное возможное число итераций от балды
-    //let xFinish = 14; //for level 3
-   //let yFinish = 14;
    let finishId = bestPort(gameState);
    let ports = gameState.ports;
    let xFinish = ports[finishId].x; 
@@ -173,15 +158,11 @@ function productProfit (gameState, index, portId) {//считает прибыл
     let goodsInPort = gameState.goodsInPort;//array
     let name = goodsInPort[index].name;
     let prices = gameState.prices[portId - 1];//СЧИТАЕТ В Н-ОМ ПОРТУ
-    console.log("portid  is:" + (portId ));
-    console.log(name + "is" + loadAmount(goodsInPort[index]) * 
-    prices[name]);
     return loadAmount(goodsInPort[index]) * prices[name]; 
 }
 function profitIndex (gameState, portId) {  //выбирает самый выгодный из goodsInPort(домашний порт) ПО ЦЕНАМ ОПРЕДЕЛЕННОГО ПОРТА(ИХ ЖЕ ТАМ НЕСКОЛЬКО)
     let goodsInPort = gameState.goodsInPort;//array
     let profitIndex = 0;
-    console.log("length" + goodsInPort.length);
     for (let i = 1; i < goodsInPort.length; i++) {
         if (productProfit(gameState, profitIndex, portId) < productProfit(gameState, i, portId)) {
             profitIndex = i;
@@ -267,27 +248,7 @@ export function getNextCommand(gameState) {
     if (gameState.ship.y < moveArray[last].y) {
         return "S";
     }
-    /*if (isInPort(gameState, true)) {//is in homeport
-        
-        if (canLoad(goodsInPort, shipGoods)){
-            let i = profitIndex(gameState);
-            let load = loadAmount(goodsInPort[i])
-           // console.log(goodsInPort[i].volume * load);//working with volume
-           //currentShipVolume
-            return "LOAD " + goodsInPort[i].name + " " + load; //
-        }
-    }
-    if (canSell(shipGoods)) {
-        if (isInPort(gameState, false)) {
-            //console.log(goodsInPort.volume * shipGoods[0].amount); Хотя зачем считать volume, если все равно все продадится и будет 0
-
-            return "SELL " + shipGoods[0].name + " " + shipGoods[0].amount; //my ship usually contains only one product, so it's in the first array
-        } else {
-            return "N";
-        }
-    } else {
-        return "S";
-    }*/
+    
     return 'WAIT';
     
 }
