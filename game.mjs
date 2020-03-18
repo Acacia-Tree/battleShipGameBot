@@ -1,25 +1,19 @@
 const shipVolume = 368;//
 let currentShipVolume = 0;
-let mapArray;
+let mapArray; // wave перерабатывает это
+let cleanMapArray; // after leveMap has been called on it and wave hasn't been used on it, and so i don't have to count it again
 let moveArray = [{x: null, y: null}]; //путь перемещения
+let bestPortId = -1; //this is current bestPort, needed to find out if the bestPort is now another port, in order to know when to recalculate the wave
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
-    console.log(mapArray);
+    cleanMapArray = mapArray;
     //mapArray[gameState.ship.y][gameState.ship.x].waveValue = 0; //конечная точка
     wave(gameState);
-        let newArray = mapArray.map(el => el.map(el => el.waveValue));
-        console.table(newArray);
-        /*for (let i = 0; i < moveArray.length; i++) {
-            console.log("x:" + moveArray.x + " " + "y:" + moveArray.y);
-        }*/
-        console.table("start:" + moveArray);
 }
 function getMoveArray(yStart, xStart) { //does it write it down normally? sometimes it works as expected, sometimes it's array islonger than needed, usually when i press startgame two times in a row, same level
     //when i refresh before each start it works as expected, perhaps this is because of my globals not refreshing each time. i should initialize them in startGame and put them in classes
-    console.log("starters: " + yStart + " " + xStart);
     moveArray[0] = {x: xStart, y: yStart};
     let lastIndex = moveArray.length - 1;
-    console.log("lastIndex:" + lastIndex);
     let minWaveValue = 253;
     let minX = -1; // not really used
     let minY = -1;
@@ -27,8 +21,6 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
     while (minWaveValue != 0 && count < 20) { //until we reach the end point (which will be in the last array element)
         let x = moveArray[lastIndex].x;
         let y = moveArray[lastIndex].y;
-        console.log("y+1:" + (y + 1));
-        console.log("x:" + x);
         if ((y + 1 < mapArray.length) && mapArray[y + 1][x].waveValue < minWaveValue ) {
             minWaveValue = mapArray[y + 1][x].waveValue;
             minY = y + 1;
@@ -49,7 +41,9 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
             minY = y;
             minX = x - 1;
         }
-        moveArray.push({x: minX, y: minY});
+        if (minX != -1 && minY != - 1) {
+            moveArray.push({x: minX, y: minY});
+        }
         lastIndex = moveArray.length - 1;
         //console.log("minWaveValue:" +minWaveValue);
         //console.log(moveArray[lastIndex]);
@@ -75,19 +69,15 @@ function bestPort(gameState) { //does it show the best port?
     let maxPrice = 0;
     let bestGoodsIndex = -1;
     let bestPortIndex = -1;
-    console.log(ports.length);
     for (let i = 1; i < ports.length; i++) {
-        console.log("hi im " + i);
         let currentGoodsIndex = profitIndex(gameState, i);
         let currentPrice = productProfit(gameState, currentGoodsIndex, i);
         if (currentPrice > maxPrice) {
             maxPrice = currentPrice;
-            console.log("MaxPrice:" +maxPrice);
             bestGoodsIndex = currentGoodsIndex;
             bestPortIndex = i;
         }
     }
-    console.log("bestportIndex:" + bestPortIndex);
     return bestPortIndex;  
 }
 
@@ -237,24 +227,25 @@ export function getNextCommand(gameState) {
             let portId = 1; //первый порт
             if (gameState.ports.length > 2) {
                 portId = bestPort(gameState);
-                console.log("i wuz here");
                 
             }
-            if (moveArray.length == 1) {
-                console.log("here too");
-                let ports = gameState.ports;
-                console.log(ports[portId].y + " " + ports[portId].x);
-                moveArray = getMoveArray(ports[portId].y, ports[portId].x); //calculating new route
-                console.log(moveArray);
-                //this is without recalculating the wave, don't forget
+            if (bestPortId == -1) {// wasn't before initialized with a new value
+                    bestPortId = portId;
+                }
+            if (moveArray.length == 1) {//все ходы израсходованы
+                if (portId != bestPortId) {//there is a new bestport now
+                    mapArray = cleanMapArray; // очищаем
+                    wave(gameState); //просчитываем до нового порта, getmovearray включено
+                } else {
+                    let ports = gameState.ports;
+                    moveArray = getMoveArray(ports[portId].y, ports[portId].x); //calculating new route using same wave данные
+                }
             }
             let i = profitIndex(gameState, portId); //the product index we want to load
             let load = loadAmount(goodsInPort[i])
             return "LOAD " + goodsInPort[i].name + " " + load; 
         } else if  (isInPort(gameState, false) && canSell(shipGoods)) {
-                moveArray = getMoveArray(moveArray[last].y, moveArray[last].x).reverse();//calculating new route
-                console.table(moveArray);
-                console.log('im in port');
+                moveArray = getMoveArray(moveArray[last].y, moveArray[last].x).reverse();//calculating new route (to home)
             return "SELL " + shipGoods[0].name + " " + shipGoods[0].amount; //my ship usually contains only one product, so it's in the first array
         }
     }
@@ -263,24 +254,17 @@ export function getNextCommand(gameState) {
     if (last == -1) {
         return "WAIT";
     }
-    console.log("last^" + last);
-    console.table("movearray:" + moveArray[last].x + " " + moveArray[last].y);
-    console.log("ship:" + gameState.ship.x + " " + gameState.ship.y);
     
     if (gameState.ship.x > moveArray[last].x) {
-        console.log("W");
         return "W"
     }
     if (gameState.ship.x < moveArray[last].x) {
-        console.log("E");
         return "E";
     }
     if (gameState.ship.y > moveArray[last].y) {
-        console.log("N");
         return "N";
     } 
     if (gameState.ship.y < moveArray[last].y) {
-        console.log("S");
         return "S";
     }
     /*if (isInPort(gameState, true)) {//is in homeport
