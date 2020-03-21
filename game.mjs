@@ -1,14 +1,16 @@
 const shipVolume = 368;//
 let currentShipVolume = 0;
-let mapArray; // wave перерабатывает это
-let cleanMapArray; // after leveMap has been called on it and wave hasn't been used on it, and so i don't have to count it again
+let mapArray = []; // wave перерабатывает это
+let cleanMapArray = []; // after leveMap has been called on it and wave hasn't been used on it, and so i don't have to count it again
 let moveArray = [{x: null, y: null}]; //путь перемещения
 let bestPortId = -1; //this is current bestPort, needed to find out if the bestPort is now another port, in order to know when to recalculate the wave
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
     cleanMapArray = mapArray;
     //mapArray[gameState.ship.y][gameState.ship.x].waveValue = 0; //конечная точка
-    wave(gameState);
+   // wave(gameState);
+    let newArray = mapArray.map(el => el.map(el => el.mapValue));
+        console.table(newArray);
 }
 function getMoveArray(yStart, xStart) { //does it write it down normally? sometimes it works as expected, sometimes it's array islonger than needed, usually when i press startgame two times in a row, same level
     //when i refresh before each start it works as expected, perhaps this is because of my globals not refreshing each time. i should initialize them in startGame and put them in classes
@@ -18,7 +20,7 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
     let minX = -1; // not really used
     let minY = -1;
     let count = 0; //make sure it doesn't do too much
-    while (minWaveValue != 0 && count < 20) { //until we reach the end point (which will be in the last array element)
+    while (minWaveValue != 0 && count < 40) { //until we reach the end point (which will be in the last array element)
         let x = moveArray[lastIndex].x;
         let y = moveArray[lastIndex].y;
         if ((y + 1 < mapArray.length) && mapArray[y + 1][x].waveValue < minWaveValue ) {
@@ -122,31 +124,86 @@ function wave(gameState) {
     }
 }
 function levelArray(levelMap) { // без стартовой точки, конечной точки;
-    let array = [[]];
+    //consider trim and split
+    let rowLength = 0; 
+    let enter = 0;//counts
     let n = 0;
-    let i = 0;
-    let j = 0;
+    while (enter < 1) {
+        if (levelMap[n] == '\n') {
+            enter++;
+        } else {
+            rowLength++;
+        }
+        n++;
+    }
+    let columnLength = 1; 
+    n = 0;
     while (n != levelMap.length) {
         if (levelMap[n] == '\n') {
-            j = 0;
-            i++;
-            array.push([]);
-        } else if (levelMap[n] != ` `) {
-            let waveValue;
-            if (levelMap[n] == '#') {
-                waveValue = 255; //непроходимо
-            } else if (levelMap[n] == '~' || levelMap[n] == 'H' || levelMap[n] == 'O' ) {
-                waveValue = 254; //проходимо
-            } /*else if (levelMap[n] == 'H') {
-                waveValue = 252; //проходимо
-            } else if (levelMap[n] == 'O') {
-                waveValue = 251; //проходимо
-            } */
-            array[i][j] = {mapValue: levelMap[n], waveValue: waveValue};
-            j++
+            columnLength++
         }
-        n++
+        n++;
     }
+
+    columnLength += 2;
+    rowLength += 2; //to count the extra for the resulting array
+    let array = [];
+    let mapValue, waveValue;
+    console.log(levelMap.length);
+    n = 0;
+   /*for (let i = 0; i < columnLength; i++) {
+        array.push([]);
+        for (let j = 0; j < rowLength; j++) {
+            if ((j == 0) || (i == 0) || (j == (rowLength - 1)) || (i == (columnLength - 1))) {
+                mapValue = "E";
+                waveValue = 255;
+                if ((j == (rowLength - 1)) || (i == (columnLength - 1))) {
+                    n++;
+                }
+            } else {
+                if (levelMap[n] != '\n'){
+                    mapValue = levelMap[n];
+                    if (levelMap[n] == '#') {
+                        waveValue = 255; //непроходимо
+                    } else if (levelMap[n] == '~' || levelMap[n] == 'H' || levelMap[n] == 'O' ) {
+                        waveValue = 254; //проходимо
+                    } 
+                } 
+                n++;
+            }
+            console.log(n);
+            array[i][j] = {mapValue: mapValue, waveValue: waveValue};
+        }
+        
+    }*/
+    for (let i = 0; i < columnLength ; i++) {
+        array.push([]);
+        for (let j = 0; j < rowLength ; j++) {
+            if ((j == 0) || (i == 0) || (j == (rowLength - 1)) || (i == (columnLength - 1))) {
+                mapValue = "E";
+                waveValue = 255;
+               /* if ((j == (rowLength - 1)) || (i == (columnLength - 1))) {
+                    n++;
+                }*/
+            } else {
+                if (levelMap[n] != '\n'){
+                    mapValue = levelMap[n];
+                    if (levelMap[n] == '#') {
+                        waveValue = 255; //непроходимо
+                    } else if (levelMap[n] == '~' || levelMap[n] == 'H' || levelMap[n] == 'O' ) {
+                        waveValue = 254; //проходимо
+                    } 
+                } else { //пропускаем enter И ничего не записывваем и не итерируем
+                    j--;
+                }
+                n++;
+            }
+            array[i][j] = {mapValue: mapValue, waveValue: waveValue};
+        }    
+    }
+
+    let newArray = array.map(el => el.map(el => el.mapValue));
+        console.table(newArray);
     return array;
 
 }
@@ -199,6 +256,7 @@ function canSell(shipGoods) {//sell onl if there is something to sell
 }
 
 export function getNextCommand(gameState) {
+    
     let goodsInPort = gameState.goodsInPort; // goods in the port 
     let  shipGoods = gameState.ship.goods;  //what should go or is on the ship (in first product)
     let last = moveArray.length - 1;
@@ -248,6 +306,7 @@ export function getNextCommand(gameState) {
     if (gameState.ship.y < moveArray[last].y) {
         return "S";
     }
+    
     
     return 'WAIT';
     
