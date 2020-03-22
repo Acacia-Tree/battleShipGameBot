@@ -21,7 +21,7 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
     let minX = -1; // not really used
     let minY = -1;
     let count = 0; //make sure it doesn't do too much
-    while (minWaveValue != 0 && count < 40) { //until we reach the end point (which will be in the last array element)
+    while (minWaveValue != 0 && count < 64) { //until we reach the end point (which will be in the last array element)
         let x = moveArray[lastIndex].x;
         let y = moveArray[lastIndex].y;
 
@@ -63,39 +63,41 @@ function bestPort(gameState) {
 
 function wave(gameState) {
     let Ni = 0; //счетчик итераций, повторений
-    let Nk = 64; //максимальное возможное число итераций от балды
+    let Nk = 24; //максимальное возможное число итераций от балды
    let finishId = bestPort(gameState);
    let ports = gameState.ports;
    let xFinish = ports[finishId].x + 1; //+1 because of padding OK!
    let yFinish = ports[finishId].y + 1; 
     mapArray[yFinish][xFinish].waveValue = 253; //стартовая точка
     mapArray[gameState.ship.y + 1][gameState.ship.x + 1].waveValue = 0; //конечная точка //+1 for padding OK!
-    let di = [1, 0, -1, 0];// смещения, соответствующие соседям ячейки
-    let dj = [0, 1, 0, -1];//справа, снизу, селва и сверху
+    let dx = [1, 0, -1, 0];// смещения, соответствующие соседям ячейки
+    let dy = [0, 1, 0, -1];//справа, снизу, слева и сверху
+    
+    let lastWave = [{x: gameState.ship.x + 1, y: gameState.ship.y + 1}];
+    let currentWave = [];
+    console.log("im here");
     while (Ni <= Nk) {
-        for (let i = 0; i < mapArray.length; i++) { 
-            for (let j = 0; j < mapArray[i].length ; j++) {
-                for (let k = 0; k < 4; k++) {
-                    if (mapArray[i][j].waveValue == Ni) {
-                        if (mapArray[i + di[k]][j + dj[k]].waveValue == 253) {
-                            getMoveArray(i + di[k], j + dj[k]); 
-                            return true;
-                        } 
-                        if (mapArray[i + di[k]][j + dj[k]].waveValue == 254) {
-                            mapArray[i + di[k]][j + dj[k]].waveValue = Ni + 1;
-                        } 
-                    }
-                }
-                
+        for (let i = 0; i < lastWave.length; i++) {
+            let y  = lastWave[i].y;
+            let x = lastWave[i].x;
+            for (let k = 0; k < 4; k++) {
+                let iy = y + dy[k];
+                let ix = x + dx[k];
+                if (mapArray[iy][ix].waveValue == 253) {
+                    getMoveArray(iy, ix); 
+                    return true;
+                } 
+                if (mapArray[iy][ix].waveValue == 254) {
+                    mapArray[iy][ix].waveValue = Ni + 1;
+                    currentWave.push({x: ix, y: iy});
+                } 
             }
         }
         Ni++;
-    } 
-    if (Ni > Nk) {
-        return false;//поиск маршрута неудачное
-    } else {
-        return true;
+        lastWave = currentWave.slice();
+        currentWave = [];
     }
+    return false;//поиск маршрута неудачное
 }
 function levelArray(levelMap) { // без стартовой точки, конечной точки;
     //consider trim and split
