@@ -236,10 +236,9 @@ export function getNextCommand(gameState) {
                 }
             if (moveArray.length == 1) {//все ходы израсходованы
                 if (portId != bestPortId) {//there is a new bestport now
+                    bestPortId = portId;
                     mapArray = cleanMapArray; // очищаем
-                    //USING BESTPORTID CLEAN 253
                     wave(gameState); //просчитываем до нового порта, getmovearray включено
-                    //TESTTESTTEST
                     let newArray = mapArray.map(el => el.map(el => el.waveValue));
         console.table(newArray);
         console.table(moveArray);
