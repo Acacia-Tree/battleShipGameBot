@@ -6,13 +6,27 @@ let moveArray = [{x: null, y: null}]; //путь перемещения
 let bestPortId = -1; //this is current bestPort, needed to find out if the bestPort is now another port, in order to know when to recalculate the wave
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
-    cleanMapArray = mapArray;
-    //mapArray[gameState.ship.y][gameState.ship.x].waveValue = 0; //конечная точка
+    cleanMapArray = cloneArray(mapArray);
     wave(gameState);
-    let newArray = mapArray.map(el => el.map(el => el.waveValue));
+    let newArray = mapArray.map(el => el.map(el => el.mapValue));
         console.table(newArray);
         console.table(moveArray);
 }
+function cloneArray(arr) {//for copying arrays WITH OBJECTS
+    var result = [];
+    for (let i = 0; i < arr.length; i++) {
+        let row = []
+        for (let j = 0; j < arr[0].length; j++) {
+            let element = {};
+            for (var prop in arr[i][j]) {
+                element[prop] = arr[i][j][prop];
+            }
+            row.push(element);
+        }
+        result.push(row);
+    }
+    return result;
+  }
 function getMoveArray(yStart, xStart) { //does it write it down normally? sometimes it works as expected, sometimes it's array islonger than needed, usually when i press startgame two times in a row, same level
     //when i refresh before each start it works as expected, perhaps this is because of my globals not refreshing each time. i should initialize them in startGame and put them in classes
     moveArray[0] = {x: xStart, y: yStart}; 
@@ -210,8 +224,10 @@ export function getNextCommand(gameState) {
     
     if (isInPort(gameState, true)|| isInPort(gameState, false)) {
         if (isInPort(gameState, true) && canLoad(goodsInPort, shipGoods)) {//is in homeport
-            let portId = 1; //первый порт
-            if (gameState.ports.length > 2) {
+            let portId; 
+            if (gameState.ports.length == 2) {
+                portId = 1;//первый порт
+            } else {
                 portId = bestPort(gameState);
                 
             }
@@ -221,7 +237,12 @@ export function getNextCommand(gameState) {
             if (moveArray.length == 1) {//все ходы израсходованы
                 if (portId != bestPortId) {//there is a new bestport now
                     mapArray = cleanMapArray; // очищаем
+                    //USING BESTPORTID CLEAN 253
                     wave(gameState); //просчитываем до нового порта, getmovearray включено
+                    //TESTTESTTEST
+                    let newArray = mapArray.map(el => el.map(el => el.waveValue));
+        console.table(newArray);
+        console.table(moveArray);
                 } else {
                     let ports = gameState.ports;
                     moveArray = getMoveArray(ports[portId].y + 1, ports[portId].x + 1); //calculating new route using same wave данные
