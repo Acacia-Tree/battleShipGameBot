@@ -265,14 +265,16 @@ function nearPirates(gameState) {
                 if (areaX == pirateX && areaY == pirateY) {
                     //run away
                     console.log("ABOUT TO CRASH INTO A PIRATE AT" + areaY + " " + areaX);
+                    return "S";
                     break; //found only for one pirate, no need to check others in k, check for other pirates
                 }
             }
         }
     }
     //
-    return;
+    return false;
 }
+let value = false; //for pirate test
 export function getNextCommand(gameState) {
     
     let goodsInPort = gameState.goodsInPort; // goods in the port 
@@ -307,31 +309,50 @@ export function getNextCommand(gameState) {
             let i = profitIndex(gameState, portId); //the product index we want to load
             let load = loadAmount(goodsInPort[i])
             return "LOAD " + goodsInPort[i].name + " " + load; 
-        } else if  (isInPort(gameState, false) && canSell(shipGoods)) {
+        } else {
+            if  (isInPort(gameState, false) && canSell(shipGoods)) {
                 moveArray = getMoveArray(moveArray[last].y, moveArray[last].x).reverse();//calculating new route (to home)
             return "SELL " + shipGoods[0].name + " " + shipGoods[0].amount; //my ship usually contains only one product, so it's in the first array
+            }
+        } 
+    }
+    
+
+    value = nearPirates(gameState);
+    if (value) {
+        let result = value;
+        value = false;
+         //perhaps to go back to first dot it wastes a move and a last and a pop, so i should make a copy of last move //this is just a bandage, temporary
+        moveArray.push(moveArray[last]);//think about a better way to copy if needed (because of link to obj)
+        return result;
+    } else {
+            moveArray.pop();
+            last = moveArray.length - 1;
+            if (last == -1) {
+                console.log("i'm waiting 1");
+                return "WAIT";
+                
+            }
+        if ((gameState.ship.x + 1) > moveArray[last].x) { //+1 for padding
+            return "W"
+        }
+        if ((gameState.ship.x + 1) < moveArray[last].x) {
+            return "E";
+        }
+        if ((gameState.ship.y + 1) > moveArray[last].y) {
+            return "N";
+        } 
+        if ((gameState.ship.y + 1)< moveArray[last].y) {
+            return "S";
         }
     }
-    moveArray.pop();
-    last = moveArray.length - 1;
-    if (last == -1) {
-        return "WAIT";
-    }
-    nearPirates(gameState);
-    if ((gameState.ship.x + 1) > moveArray[last].x) { //+1 for padding
-        return "W"
-    }
-    if ((gameState.ship.x + 1) < moveArray[last].x) {
-        return "E";
-    }
-    if ((gameState.ship.y + 1) > moveArray[last].y) {
+   /* if (value < 3) {
+        value++;
         return "N";
-    } 
-    if ((gameState.ship.y + 1)< moveArray[last].y) {
-        return "S";
-    }
-    
-    
+    } else {
+        return "WAIT";
+    }*/
+    console.log("i'm waiting 2");
     return 'WAIT';
     
 }
