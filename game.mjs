@@ -12,6 +12,7 @@ export function startGame(levelMap, gameState) {
         console.table(newArray);
         console.table(moveArray);
 }
+
 function cloneArray(arr) {//for copying arrays WITH OBJECTS
     var result = [];
     for (let i = 0; i < arr.length; i++) {
@@ -39,7 +40,7 @@ function getMoveArray(yStart, xStart) { //does it write it down normally? someti
         let x = moveArray[lastIndex].x;
         let y = moveArray[lastIndex].y;
 
-        let dy = [1, 0, -1, 0];// смещения, соответствующие соседям ячейки !!!!!!!!!!!!!!!!!!!!!! HERE ITS Y, THERE IT'S I, CHANGE LATER FOR ONE CODE STYLE
+        let dy = [1, 0, -1, 0];// смещения, соответствующие соседям ячейки !!!!!!!!!!!!!!!!!!!!!! 
         let dx = [0, 1, 0, -1];//справа, снизу, селва и сверху
         for (let k = 0; k < 4; k++) {
             if (mapArray[y + dy[k]][x + dx[k]].waveValue < minWaveValue ) {
@@ -215,13 +216,70 @@ function canLoad(goodsInPort, shipGoods) { //Если корабль попро�
 function canSell(shipGoods) {//sell onl if there is something to sell
     return shipGoods.length != 0
 }
+/*function nearPirates(gameState,nextMove) {//ship's next move
 
+let dx = [1, 0, -1, 0];// смещения, соответствующие соседям ячейки
+let dy = [0, 1, 0, -1];//справа, снизу, слева и сверху
+let pirates = gameState.pirates;
+let x = nextMove.x; 
+let y = nextMove.y;
+console.log("ship at:" + (gameState.ship.y + 1) + " " + (gameState.ship.x + 1));
+console.log("nextMove:" + y + " " + x);
+for (let n = 0; n < pirates.length; n++) {
+    let pirateX = pirates[n].x + 1; //+1 for padding
+    let pirateY = pirates[n].y + 1;
+    console.log("k cycle");
+    for (let k = 0; k < 4 ; k++) {
+        let nextY = y + dy[k];
+        let nextX = x + dx[k];
+        console.log("next:" + nextY + " " + nextX);
+        console.log("pirateY:" + pirateY + " " + pirateX);
+        if (nextX == pirateX && nextY == pirateY) {
+            //run away
+            //check for other pirate too (might be between two pirates)
+            console.log("ABOUT TO CRASH INTO A PIRATE AT" +nextY + " " + nextX);
+            break; //found only for one pirate, no need to check others in k, check for other pirates
+        }
+    }
+    
+}
+return;
+} */
+function nearPirates(gameState) {
+    let x = gameState.ship.x + 1; 
+    let y = gameState.ship.y + 1;
+    console.log("ship at " + y + " " + x);
+    let dx = [0, 1, 2, 3, 2, 1, 0, -1, -2, -3, -2, -1];
+    let dy = [-3, -2, -1, 0, 1, 2, 3, 2, 1, 0, -1, -2];
+    let pirates = gameState.pirates;
+    for (let n = 0; n < pirates.length; n++) {
+        let pirateX = pirates[n].x + 1; //+1 for padding
+        let pirateY = pirates[n].y + 1;
+        if (Math.sqrt(Math.pow(((x - 3) - pirateX),2) - Math.pow(y - pirateY,2)) <= 3) { //taking one (the highest possible number) from area distance around ship (3,0)
+            //it's within reasonable distance, so i can do a full check
+            for (let k = 0; k < dx.length ; k++) {
+                let areaY = y + dy[k];
+                let areaX = x + dx[k];
+                console.log("area:" + areaY + " " + areaX);
+                console.log("pirateY:" + pirateY + " " + pirateX);
+                if (areaX == pirateX && areaY == pirateY) {
+                    //run away
+                    console.log("ABOUT TO CRASH INTO A PIRATE AT" + areaY + " " + areaX);
+                    break; //found only for one pirate, no need to check others in k, check for other pirates
+                }
+            }
+        }
+    }
+    //
+    return;
+}
 export function getNextCommand(gameState) {
     
     let goodsInPort = gameState.goodsInPort; // goods in the port 
     let  shipGoods = gameState.ship.goods;  //what should go or is on the ship (in first product)
     let last = moveArray.length - 1;
-    
+    let ports = gameState.ports;
+
     if (isInPort(gameState, true)|| isInPort(gameState, false)) {
         if (isInPort(gameState, true) && canLoad(goodsInPort, shipGoods)) {//is in homeport
             let portId; 
@@ -243,7 +301,6 @@ export function getNextCommand(gameState) {
         console.table(newArray);
         console.table(moveArray);
                 } else {
-                    let ports = gameState.ports;
                     moveArray = getMoveArray(ports[portId].y + 1, ports[portId].x + 1); //calculating new route using same wave данные
                 } //+1 because of padding //judging by same in wave function OK!
             }
@@ -260,9 +317,8 @@ export function getNextCommand(gameState) {
     if (last == -1) {
         return "WAIT";
     }
-    
+    nearPirates(gameState);
     if ((gameState.ship.x + 1) > moveArray[last].x) { //+1 for padding
-
         return "W"
     }
     if ((gameState.ship.x + 1) < moveArray[last].x) {
