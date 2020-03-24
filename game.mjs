@@ -4,30 +4,50 @@ let mapArray = []; // wave перерабатывает это
 let cleanMapArray = []; // after leveMap has been called on it and wave hasn't been used on it, and so i don't have to count it again
 let moveArray = [{x: null, y: null}]; //путь перемещения
 let bestPortId = -1; //this is current bestPort, needed to find out if the bestPort is now another port, in order to know when to recalculate the wave
+
+let value = false; //for pirate test
+let lastPirateMove = [];//хранит только последний ход каждого пирата
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
-    cleanMapArray = cloneArray(mapArray);
+    cleanMapArray = cloneArray(mapArray, 2);
     wave(gameState);
     let newArray = mapArray.map(el => el.map(el => el.mapValue));
         console.table(newArray);
         console.table(moveArray);
+    
+    
+    lastPirateMove = cloneArray(gameState.pirates, 1);
+    console.table(lastPirateMove);
+
 }
 
-function cloneArray(arr) {//for copying arrays WITH OBJECTS
+function cloneArray(arr, dimension) {//for copying arrays WITH OBJECTS
     var result = [];
-    for (let i = 0; i < arr.length; i++) {
-        let row = []
-        for (let j = 0; j < arr[0].length; j++) {
-            let element = {};
-            for (var prop in arr[i][j]) {
-                element[prop] = arr[i][j][prop];
+    if (dimension == 2) {
+        for (let i = 0; i < arr.length; i++) {
+            let row = []
+            for (let j = 0; j < arr[0].length; j++) {
+                let element = {};
+                for (var prop in arr[i][j]) {
+                    element[prop] = arr[i][j][prop];
+                }
+                row.push(element);
             }
-            row.push(element);
+            result.push(row);
         }
-        result.push(row);
+    } else if (dimension == 1) {
+        for (let i = 0; i < arr.length; i++) {
+            let element = {};
+            for (var prop in arr[i]) {
+                element[prop] = arr[i][prop];
+            }
+            result.push(element);
+        }
     }
+    
     return result;
-  }
+}
+
 function getMoveArray(yStart, xStart) { //does it write it down normally? sometimes it works as expected, sometimes it's array islonger than needed, usually when i press startgame two times in a row, same level
     //when i refresh before each start it works as expected, perhaps this is because of my globals not refreshing each time. i should initialize them in startGame and put them in classes
     moveArray[0] = {x: xStart, y: yStart}; 
@@ -266,6 +286,13 @@ function nearPirates(gameState) {
                     //run away
                     console.log("ABOUT TO CRASH INTO A PIRATE AT" + areaY + " " + areaX);
                     return "S";
+                    /*if (y < pirateY) {
+                        return "S";
+                    } else if (y > pirateY || (dy[k] == 0)) {
+                        return "N";
+                    } else { // на одной из вертикальных осей
+                        return "E";
+                    }*/
                     break; //found only for one pirate, no need to check others in k, check for other pirates
                 }
             }
@@ -274,7 +301,77 @@ function nearPirates(gameState) {
     //
     return false;
 }
-let value = false; //for pirate test
+function predictPirates(gameState, futureMove){//+2 in future, guranteed right passage
+    //in one move pirate is only in one line
+    //don't forget padding +1
+    //when to start with, predicting the pirates through point or length counting and same line(it may still not pose a threat going vertically when threat is horizontal for example)
+    let predictions = [];//тут хранятся направления движения
+    let pirates = gameState.pirates;
+    
+    let pirateX = pirates[0].x + 1;//padding +1
+    let pirateY = pirates[0].y + 1;
+    let lastPirateX = lastPirateMove[0].x + 1;
+    let lastPirateY = lastPirateMove[0].y + 1;
+    /*
+    let points = gameState.piratesPoints;
+
+    console.table(points);
+    for (let j = 0; j < (points[0].length - 1); j++) {//for first pirate
+        let px = points[0][j].x + 1;//padding +1
+        let py = points[0][j].y + 1;
+        if (pirateX == px) {//moves horizontally
+            //это j c которой начинается линия, значит пират движется сейчас по этой линии (с разными значениями y)
+            if ((pirateY == futureMove.y) && (Math.sqrt(Math.pow((pirateX - futureMove.x),2) - Math.pow((pirateX - futureMove.x),2)) < 4) ) { //pirateX==futureMove.x || 
+                //not only moves horizontally, but on same line(y) and close enough to about to collide into ship
+                return "WAIT"
+            }
+        }
+        if (pirateY == py) {//moves vertically
+            //это j c которой начинается линия, значит пират движется сейчас по этой линии (с разными значениями y)
+            if ((pirateX == futureMove.x) && (Math.sqrt(Math.pow((pirateX - futureMove.x),2) - Math.pow((pirateX - futureMove.x),2)) < 4) ) { //pirateX==futureMove.x || 
+                //not only moves vertically, but on same column(x) and close enough to about to collide into ship
+                return "WAIT"
+            }
+        }
+        //pointsx - other x = direction*/
+
+        //1) horizontal or vertical
+        //2)move towards or moves away from futuremove
+        let scaredPoints = 5; //lol, change it later to something else!!!!!!!!!!!!!
+        let moves = "nothing";
+        let towardsFuture = false;
+        if (lastPirateX - pirateX != 0) { //something changed 
+            moves = "WE"; //horizontally
+            console.table(lastPirateMove);
+            console.log(Math.abs(futureMove.x - lastPirateX) + " and " + Math.abs(futureMove.x - pirateX));//
+            if (Math.abs(futureMove.x - lastPirateX) > Math.abs(futureMove.x - pirateX) ) { // если расстояние было больше, а стало меньше, значит движется в нашу сторону
+                towardsFuture = true;
+                console.log("i wuz here");
+            } 
+        }
+        /*} else if (lastPirateY - pirateY != 0) {
+            moves = "SN";
+        }*/
+        console.log(moves);
+        lastPirateMove = cloneArray(pirates, 1);
+        console.table(lastPirateMove);
+        console.log(pirateY + " y " + (futureMove.y + 1));
+        console.log("pirateX:" + pirateX);
+        console.log("futureMove:" + futureMove.x);
+        console.log(Math.abs(pirateX - futureMove.x ));
+        if ( (towardsFuture) && (moves == "WE") && (pirateY == (futureMove.y )) && ( Math.abs(pirateX - futureMove.x ) < scaredPoints) ) { //pirateX==futureMove.x || 
+            //not only moves horizontally, but on same line(y) as future and close enough to about to collide into ship
+            console.log("predict wait 1");
+            return "WAIT"
+        }
+        /*if ( (moves == "SN") && (pirateX == futureMove.x) && (Math.sqrt(Math.pow((pirateX - futureMove.x),2) - Math.pow((pirateX - futureMove.x),2)) < scaredPoints) ) { //pirateX==futureMove.x || 
+            //not only moves vertically, but on same column(x) as future and close enough to about to collide into ship
+            console.log("predict wait 2");
+            return "WAIT"
+        }*/
+    return false;
+}
+
 export function getNextCommand(gameState) {
     
     let goodsInPort = gameState.goodsInPort; // goods in the port 
@@ -317,13 +414,15 @@ export function getNextCommand(gameState) {
         } 
     }
     
-
-    value = nearPirates(gameState);
+    if (moveArray.length >= 3) {
+        value = predictPirates(gameState,moveArray[last - 2]);
+    }
+    //value = nearPirates(gameState);
     if (value) {
         let result = value;
         value = false;
          //perhaps to go back to first dot it wastes a move and a last and a pop, so i should make a copy of last move //this is just a bandage, temporary
-        moveArray.push(moveArray[last]);//think about a better way to copy if needed (because of link to obj)
+        //moveArray.push(moveArray[last]);//think about a better way to copy if needed (because of link to obj)
         return result;
     } else {
             moveArray.pop();
