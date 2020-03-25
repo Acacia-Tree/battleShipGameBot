@@ -9,24 +9,29 @@ let value = false; //for pirate test
 let lastPirateMove = [];//хранит только последний ход каждого пирата
 export function startGame(levelMap, gameState) {
     mapArray = levelArray(levelMap);
-    cleanMapArray = cloneArray(mapArray, 2);
+    cleanMapArray = cloneArray(mapArray, 2, false);
     wave(gameState);
-    let newArray = mapArray.map(el => el.map(el => el.mapValue));
+    /*let newArray = mapArray.map(el => el.map(el => el.mapValue));
         console.table(newArray);
-        console.table(moveArray);
+        console.table(moveArray);*/
     
     
-    lastPirateMove = cloneArray(gameState.pirates, 1);
-    console.table(lastPirateMove);
+    lastPirateMove = cloneArray(gameState.pirates, 1, false);
 
 }
 
-function cloneArray(arr, dimension) {//for copying arrays WITH OBJECTS
+function cloneArray(arr, dimension, one) {//for copying arrays WITH OBJECTS
     var result = [];
     if (dimension == 2) {
+        let length;
+        if (one) {
+            length = 1;
+        } else {
+            length = arr[0].length;
+        }
         for (let i = 0; i < arr.length; i++) {
             let row = []
-            for (let j = 0; j < arr[0].length; j++) {
+            for (let j = 0; j < length; j++) {
                 let element = {};
                 for (var prop in arr[i][j]) {
                     element[prop] = arr[i][j][prop];
@@ -352,30 +357,43 @@ function predictPirates(gameState, futureMove){//+2 in future, guranteed right p
 
         if ( (lastPirateX - pirateX != 0) ) {//pirate moves horizontally
             
-             if ((pirateY == (futureMove.y )) &&  (Math.abs(pirateX - futureMove.x ) < scaredPoints) && (Math.abs(futureMove.x - lastPirateX) > Math.abs(futureMove.x - pirateX)) ) {
-                if (currentMoveY != pirateY) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
+             if ((pirateY == (futureMove.y )) &&  (Math.abs(Math.abs(pirateX) - Math.abs(futureMove.x)) < scaredPoints) && (Math.abs(Math.abs(futureMove.x) - Math.abs(lastPirateX))) > Math.abs(Math.abs(futureMove.x) - Math.abs(pirateX)))  {
+                if ( (currentMoveY != pirateY) && !(pirateY == (currentMoveY + 1)) && !(pirateY == (currentMoveY - 1)) ) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности) //second is for backhanded switch moves
                     console.log("predict wait 1");
                     return "WAIT";
                 } else { //находятся на той же линии
                     console.log("retreat 1");
-                    moveArray.push({x: currentMoveX, y: currentMoveY - 1});
-                    moveArray.push({x: currentMoveX, y: currentMoveY - 2});
-                    moveArray.push({x: currentMoveX, y: currentMoveY - 1});
+                   // if (mapArray[currentMoveY - 2][currentMoveX].waveValue != 255 && mapArray[currentMoveY - 1][currentMoveX].waveValue != 255) {
+                       /* moveArray.push({x: currentMoveX, y: currentMoveY - 1});
+                        moveArray.push({x: currentMoveX, y: currentMoveY - 2});
+                        moveArray.push({x: currentMoveX, y: currentMoveY - 1});*/
+                   // } else {
+                        moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                        moveArray.push({x: currentMoveX, y: currentMoveY + 2});
+                        moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                   // }
+                    /*moveArray = getMoveArray(currentMoveY - 2, currentMoveX);
+                    moveArray.push({x: currentMoveX, y: currentMoveY - 2});//!!!!
+                    moveArray.push({x: currentMoveX, y: currentMoveY - 1});*/
+                    
                     return "don't pop";
                 }
              }
         } else { //pirate moves vertically
-            
-            if ((pirateX == (futureMove.x )) &&  (Math.abs(pirateY - futureMove.y ) < scaredPoints) && (Math.abs(futureMove.y - lastPirateY) > Math.abs(futureMove.y - pirateY)) ) {
+           
+            if ((pirateX == (futureMove.x )) &&  (Math.abs(Math.abs(pirateY) - Math.abs(futureMove.y) ) < scaredPoints) && (Math.abs(Math.abs(futureMove.y) - Math.abs(lastPirateY)) > Math.abs(Math.abs(futureMove.y) - Math.abs(pirateY))) ) {
 
-                if (currentMoveX != pirateX) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
+                if (currentMoveX != pirateX && !(pirateX == (currentMoveX + 1)) && !(pirateX == (currentMoveX - 1))) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
                     console.log("predict wait 2");
                     return "WAIT";
                 } else { //находятся на той же линии
                     console.log("retreat 2");
+                    /*moveArray = getMoveArray(currentMoveY, currentMoveX + 2);
                     moveArray.push({x: currentMoveX + 1, y: currentMoveY });
-                    moveArray.push({x: currentMoveX + 2, y: currentMoveY });
-                    moveArray.push({x: currentMoveX + 1, y: currentMoveY });
+                    moveArray.push({x: currentMoveX + 2, y: currentMoveY });*/
+                    moveArray.push({x: currentMoveX + 1, y: currentMoveY});
+                    moveArray.push({x: currentMoveX + 2, y: currentMoveY});
+                    moveArray.push({x: currentMoveX + 1, y: currentMoveY});
                     return "don't pop";
                 }
 
@@ -462,7 +480,7 @@ export function getNextCommand(gameState) {
         } 
     }
     
-    if (moveArray.length >= 3) {
+    if (moveArray.length >= 3 && gameState.pirates.length > 0) {
         value = predictPirates(gameState,moveArray[last - 2]);
     }
     //value = nearPirates(gameState);
@@ -505,6 +523,7 @@ export function getNextCommand(gameState) {
         return "WAIT";
     }*/
     console.log("i'm waiting 2");
+    return "W"
     return 'WAIT';
     
 }
