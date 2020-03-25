@@ -301,6 +301,9 @@ function nearPirates(gameState) {
     //
     return false;
 }
+function distance(x1,y1,x2,y2) {
+    return Math.sqrt(Math.pow(x2 - x1,2) + Math.pow(y2 - y1,2));
+}
 function predictPirates(gameState, futureMove){//+2 in future, guranteed right passage
     //in one move pirate is only in one line
     //don't forget padding +1
@@ -312,6 +315,8 @@ function predictPirates(gameState, futureMove){//+2 in future, guranteed right p
     let pirateY = pirates[0].y + 1;
     let lastPirateX = lastPirateMove[0].x + 1;
     let lastPirateY = lastPirateMove[0].y + 1;
+    let currentMoveX = gameState.ship.x + 1 ;
+    let currentMoveY = gameState.ship.y + 1;
     /*
     let points = gameState.piratesPoints;
 
@@ -338,33 +343,76 @@ function predictPirates(gameState, futureMove){//+2 in future, guranteed right p
         //1) horizontal or vertical
         //2)move towards or moves away from futuremove
         let scaredPoints = 5; //lol, change it later to something else!!!!!!!!!!!!!
-        let moves = "nothing";
-        let towardsFuture = false;
-        if (lastPirateX - pirateX != 0) { //something changed 
-            moves = "WE"; //horizontally
-            console.table(lastPirateMove);
-            console.log(Math.abs(futureMove.x - lastPirateX) + " and " + Math.abs(futureMove.x - pirateX));//
-            if (Math.abs(futureMove.x - lastPirateX) > Math.abs(futureMove.x - pirateX) ) { // если расстояние было больше, а стало меньше, значит движется в нашу сторону
-                towardsFuture = true;
-                console.log("i wuz here");
-            } 
-        }
-        /*} else if (lastPirateY - pirateY != 0) {
-            moves = "SN";
-        }*/
-        console.log(moves);
+
+        //MAYBE ADD IF CURRENT SHIP IS NOT ON SAME AXIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //OR IS IT CURRENT MOVE? (THERE IS A DIFFERENCE) && !(currentMoveX == pirateX || currentMoveY == pirateY)
         lastPirateMove = cloneArray(pirates, 1);
-        console.table(lastPirateMove);
-        console.log(pirateY + " y " + (futureMove.y + 1));
-        console.log("pirateX:" + pirateX);
-        console.log("futureMove:" + futureMove.x);
-        console.log(Math.abs(pirateX - futureMove.x ));
-        if ( (towardsFuture) && (moves == "WE") && (pirateY == (futureMove.y )) && ( Math.abs(pirateX - futureMove.x ) < scaredPoints) ) { //pirateX==futureMove.x || 
-            //not only moves horizontally, but on same line(y) as future and close enough to about to collide into ship
-            console.log("predict wait 1");
-            return "WAIT"
+        console.log ((currentMoveX) + " " + (currentMoveY));
+        console.log(pirateX + " pirate " + pirateY);
+
+        if ( (lastPirateX - pirateX != 0) ) {//pirate moves horizontally
+            
+             if ((pirateY == (futureMove.y )) &&  (Math.abs(pirateX - futureMove.x ) < scaredPoints) && (Math.abs(futureMove.x - lastPirateX) > Math.abs(futureMove.x - pirateX)) ) {
+                if (currentMoveY != pirateY) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
+                    console.log("predict wait 1");
+                    return "WAIT";
+                } else { //находятся на той же линии
+                    console.log("retreat 1");
+                    moveArray.push({x: currentMoveX, y: currentMoveY - 1});
+                    moveArray.push({x: currentMoveX, y: currentMoveY - 2});
+                    moveArray.push({x: currentMoveX, y: currentMoveY - 1});
+                    return "don't pop";
+                }
+             }
+        } else { //pirate moves vertically
+            
+            if ((pirateX == (futureMove.x )) &&  (Math.abs(pirateY - futureMove.y ) < scaredPoints) && (Math.abs(futureMove.y - lastPirateY) > Math.abs(futureMove.y - pirateY)) ) {
+
+                if (currentMoveX != pirateX) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
+                    console.log("predict wait 2");
+                    return "WAIT";
+                } else { //находятся на той же линии
+                    console.log("retreat 2");
+                    moveArray.push({x: currentMoveX + 1, y: currentMoveY });
+                    moveArray.push({x: currentMoveX + 2, y: currentMoveY });
+                    moveArray.push({x: currentMoveX + 1, y: currentMoveY });
+                    return "don't pop";
+                }
+
+            }
+
+            /*if (currentMoveX != pirateX) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
+                console.log("predict wait 2");
+                return "WAIT";
+            } else {
+
+            }*/
         }
-        /*if ( (moves == "SN") && (pirateX == futureMove.x) && (Math.sqrt(Math.pow((pirateX - futureMove.x),2) - Math.pow((pirateX - futureMove.x),2)) < scaredPoints) ) { //pirateX==futureMove.x || 
+        /*if ( (lastPirateX - pirateX != 0) ) {//moves horizontallly
+            if ((pirateY == currentMoveY) && Math.abs(currentMoveX - lastPirateX) > Math.abs(currentMoveX - pirateX)  && ( Math.abs(pirateX - currentMoveX ) < scaredPoints) && (distance(futureMove.x,futureMove.y, pirateX, pirateY) < distance(currentMoveX, currentMoveY, pirateX,pirateY) ) ){ //on same axis but moving towards pirate                        < dist changed (from <)
+                console.log("retreat 1");
+                moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                moveArray.push({x: currentMoveX, y: currentMoveY + 2});
+                moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                return "don't pop";
+            } else if ((pirateY == (futureMove.y )) && Math.abs(futureMove.x - lastPirateX) > Math.abs(futureMove.x - pirateX)  &&  ( Math.abs(pirateX - futureMove.x ) < scaredPoints) ) { //pirateX==futureMove.x || 
+                //not only moves horizontally,moving in our direction(two math abs), but on same line(y) as future and close enough to about to collide into ship
+                if ((distance(futureMove.x,futureMove.y, pirateX, pirateY) < distance(currentMoveX, currentMoveY, pirateX,pirateY) )) {//moving towards pirate
+                    console.log("retreat 2");
+                    moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                    moveArray.push({x: currentMoveX, y: currentMoveY + 2});
+                    moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                    return "don't pop";
+                } else {
+                    console.log("distance:" + distance(futureMove.x,futureMove.y, pirateX, pirateY) + " vs " + distance(currentMoveX, currentMoveY, pirateX,pirateY) );
+                console.log("predict wait 1");
+                return "WAIT";
+                }
+            }
+        }*/
+        
+        
+        /*else if ( (towardsFuture) && (moves == "SN")  && (pirateX == futureMove.x) && ( Math.abs(pirateY - futureMove.y ) < scaredPoints) ) { //pirateX==futureMove.x || 
             //not only moves vertically, but on same column(x) as future and close enough to about to collide into ship
             console.log("predict wait 2");
             return "WAIT"
@@ -418,14 +466,19 @@ export function getNextCommand(gameState) {
         value = predictPirates(gameState,moveArray[last - 2]);
     }
     //value = nearPirates(gameState);
-    if (value) {
+    if (value && value != "don't pop") {
         let result = value;
         value = false;
          //perhaps to go back to first dot it wastes a move and a last and a pop, so i should make a copy of last move //this is just a bandage, temporary
-        //moveArray.push(moveArray[last]);//think about a better way to copy if needed (because of link to obj)
+        /* if (value != "WAIT") {
+            moveArray.push(moveArray[last]);//think about a better way to copy if needed (because of link to obj) //if not WAIT
+            console.log("yep");
+         }*/
         return result;
     } else {
+        if (value !="don't pop") {
             moveArray.pop();
+        }
             last = moveArray.length - 1;
             if (last == -1) {
                 console.log("i'm waiting 1");
