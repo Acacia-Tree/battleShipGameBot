@@ -1,8 +1,6 @@
 
 
 let currentShipVolume = 0;
-let mapArray = []; // wave перерабатывает это
-let cleanMapArray = []; // after leveMap has been called on it and wave hasn't been used on it, and so i don't have to count it again
 let moveArray = [{x: null, y: null}]; //путь перемещения
 
 let value = false; //for pirate test
@@ -77,6 +75,9 @@ class MapHandler {
         this.gameState = gameState;
         this.mapArray = this.levelArray();
         this.cleanMapArray = cloneArray(this.mapArray, 2, false);
+    }
+    resetMapArray() {
+        this.mapArray = cloneArray(this.cleanMapArray, 2, false);
     }
     levelArray() { // без стартовой точки, конечной точки;
         //consider trim and split
@@ -489,12 +490,9 @@ export function getNextCommand(gameState) {
 
             if (moveArray.length == 1) {//все ходы израсходованы
                 if (portId != market.getLastBestPortId()) {//there is a new bestport now
-                    bestPortId = market.setLastBestPortId(portId); //setter
-                    mapArray = cleanMapArray; // очищаем
+                    market.setLastBestPortId(portId); //setter
+                    market.resetMapArray();
                     map.wave(); //просчитываем до нового порта, getmovearray включено
-                    let newArray = mapArray.map(el => el.map(el => el.waveValue));
-        console.table(newArray);
-        console.table(moveArray);
                 } else {
                     moveArray = map.getMoveArray(ports[portId].y + 1, ports[portId].x + 1); //calculating new route using same wave данные
                 } //+1 because of padding //judging by same in wave function OK!
