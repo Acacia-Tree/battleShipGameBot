@@ -352,12 +352,28 @@ function predictPirates(gameState, futureMove){//+2 in future, guranteed right p
         //MAYBE ADD IF CURRENT SHIP IS NOT ON SAME AXIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         //OR IS IT CURRENT MOVE? (THERE IS A DIFFERENCE) && !(currentMoveX == pirateX || currentMoveY == pirateY)
         lastPirateMove = cloneArray(pirates, 1);
-        console.log ((currentMoveX) + " " + (currentMoveY));
+        console.log ((currentMoveX) + " current " + (currentMoveY));
         console.log(pirateX + " pirate " + pirateY);
-
+        console.log(futureMove.x + " future " + futureMove.y);
         if ( (lastPirateX - pirateX != 0) ) {//pirate moves horizontally
-            
-             if ((pirateY == (futureMove.y )) &&  (Math.abs(Math.abs(pirateX) - Math.abs(futureMove.x)) < scaredPoints) && (Math.abs(Math.abs(futureMove.x) - Math.abs(lastPirateX))) > Math.abs(Math.abs(futureMove.x) - Math.abs(pirateX)))  {
+             if (  ( (pirateY == (futureMove.y)) || ( (pirateX == futureMove.x) && ((pirateY == (futureMove.y + 1)) || (pirateY == (futureMove.y - 1))) ) ) &&  (Math.abs(Math.abs(pirateX) - Math.abs(futureMove.x)) < scaredPoints) && (Math.abs(Math.abs(futureMove.x) - Math.abs(lastPirateX))) > Math.abs(Math.abs(futureMove.x) - Math.abs(pirateX)))  {
+                 console.log("im in");
+                if (  (Math.abs(Math.abs(currentMoveY) - Math.abs(futureMove.y)) < 1) && ((pirateX == futureMove.x) && ((pirateY == (futureMove.y + 1)) || (pirateY == (futureMove.y - 1))) )) {//first is to gurantee it mini retreats only once
+                    if (pirateY == (futureMove.y + 1)) {
+                        console.log("mini retreat h1");
+                        //if (mapArray[currentMoveY - 1][currentMoveX].waveValue != 255) {
+                            moveArray.push({x: currentMoveX, y: currentMoveY - 1});
+                       // }
+                    } else if (pirateY == (futureMove.y - 1)) {
+                        console.log("mini retreat h2");
+                        //if (mapArray[currentMoveY + 1][currentMoveX].waveValue != 255) {
+                            moveArray.push({x: currentMoveX, y: currentMoveY + 1});
+                       // }
+                    } else {
+                        console.log("something went wrong with our mini retreat 1");
+                    }
+                    return "don't pop";
+                }
                 if ( (currentMoveY != pirateY) && !(pirateY == (currentMoveY + 1)) && !(pirateY == (currentMoveY - 1)) ) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности) //second is for backhanded switch moves
                     console.log("predict wait 1");
                     return "WAIT";
@@ -381,9 +397,26 @@ function predictPirates(gameState, futureMove){//+2 in future, guranteed right p
              }
         } else { //pirate moves vertically
            
-            if ((pirateX == (futureMove.x )) &&  (Math.abs(Math.abs(pirateY) - Math.abs(futureMove.y) ) < scaredPoints) && (Math.abs(Math.abs(futureMove.y) - Math.abs(lastPirateY)) > Math.abs(Math.abs(futureMove.y) - Math.abs(pirateY))) ) {
+            if ( ( (pirateX == (futureMove.x)) || ((pirateY == futureMove.y) && ((pirateX == (futureMove.x + 1)) || (pirateX == (futureMove.x - 1))) )   ) &&  (Math.abs(Math.abs(pirateY) - Math.abs(futureMove.y) ) < scaredPoints) && (Math.abs(Math.abs(futureMove.y) - Math.abs(lastPirateY)) > Math.abs(Math.abs(futureMove.y) - Math.abs(pirateY))) ) {
 
-                if (currentMoveX != pirateX && !(pirateX == (currentMoveX + 1)) && !(pirateX == (currentMoveX - 1))) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
+                if ((Math.abs(Math.abs(currentMoveY) - Math.abs(futureMove.y)) < 1) && ((pirateY == futureMove.y) && ((pirateX == (futureMove.x + 1)) || (pirateX == (futureMove.x - 1))) )) {
+                    if (pirateX == (futureMove.x + 1)) {
+                        console.log("mini retreat v1");
+                       // if (mapArray[currentMoveY][currentMoveX - 1].waveValue != 255) {
+                            moveArray.push({x: currentMoveX - 1, y: currentMoveY});
+                       // }
+                    } else if (pirateX == (futureMove.x - 1)) {
+                        console.log("mini retreat v2");
+                       // if (mapArray[currentMoveY][currentMoveX + 1].waveValue != 255) {
+                            moveArray.push({x: currentMoveX + 1, y: currentMoveY});
+                      //  }
+                    } else {
+                        console.log("something went wrong with our mini retreat 2");
+                    }
+                    return "don't pop";
+                }
+
+                if ((currentMoveX != pirateX) && !(pirateX == (currentMoveX + 1)) && !(pirateX == (currentMoveX - 1))) { //идут грубо говоря перепендикулярно друг другу(не совсем так, но для наглядности)
                     console.log("predict wait 2");
                     return "WAIT";
                 } else { //находятся на той же линии
